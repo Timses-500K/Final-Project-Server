@@ -8,35 +8,30 @@ let sizeId;
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    return Size.findOne({
-      where:{
-        size: "42"
-      }
-    })
-    .then(data => {
-      sizeId = data.id;
-      return Item.findOne({
-        where: {
-          id: 1
-        }
-      })
-      .then(data => {
-        return queryInterface.bulkInsert("ItemSizes",[
-          {
-            itemId:data.id,
-            sizeId,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          },
-         
-        ])
-      })
-    })
-
+    const sizes = ["38", "39", "40", "41"];
+    const sizeObjs = await Promise.all(sizes.map(size => {
+      return Size.findOrCreate({
+        where: { size }
+      });
+    }));
+    const item = await Item.findOne({
+      where: { id: 1 }
+    });
+    itemId = item.id;
+    const itemSizes = sizeObjs.map(sizeObj => {
+      sizeId = sizeObj[0].id;
+      return {
+        itemId,
+        sizeId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    });
+    return queryInterface.bulkInsert("ItemSizes", itemSizes);
   },
 
   async down (queryInterface, Sequelize) {
     await queryInterface.bulkDelete('ItemSizes', null, {});
-
+    await Size.destroy({ where: { size: ["38", "39", "40", "41"] }});
   }
 };

@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     imageUrl: DataTypes.STRING,
     stock: DataTypes.INTEGER,
     color: DataTypes.STRING,
-    
+    visibility: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Item',

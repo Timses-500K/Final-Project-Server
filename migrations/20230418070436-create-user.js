@@ -24,6 +24,10 @@ module.exports = {
       birth: {
         type: Sequelize.DATE
       },
+      visibility: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE

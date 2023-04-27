@@ -26,6 +26,7 @@ module.exports = {
             userId,
             addressId: data.id,
             totalPrice: 90000,
+            visibility: "True",
             createdAt: new Date(),
             updatedAt: new Date()
           },
@@ -33,6 +34,7 @@ module.exports = {
             userId,
             addressId: data.id,
             totalPrice: 70000,
+            visibility: "True",
             createdAt: new Date(),
             updatedAt: new Date()
           }

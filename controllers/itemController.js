@@ -10,13 +10,17 @@ class ItemController {
           {
             model: Category,
             as: "itemCategory",
+            through: { attributes: [] },
+            attributes: ["categoryName"],
             // where:{
-            //   id: +categoryId,
+            //   id: +id,
             // }
           },
           {
             model: Size,
-            as: "itemSize"
+            as: "itemSize",
+            through: { attributes: [] },
+            attributes: ["size"]
           }
         ]
         // include: {
@@ -25,6 +29,7 @@ class ItemController {
         // }
       });
       res.status(200).json(data);
+      // console.log(data);
     } catch (err) {
       next(err);
     }
