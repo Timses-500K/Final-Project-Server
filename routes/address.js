@@ -5,10 +5,10 @@ const AddressController = require("../controllers/addressController.js");
 // Get a specific address by ID
 router.get("/:userId/:addressId", AddressController.getAddressById);
 
-// Get a specific address by ID
+// Create a new address
 router.post("/:userId", AddressController.createAddress);
 
-// Create a new address
+// Update an address
 router.put("/:userId/:addressId", AddressController.updateAddress);
 
 module.exports = router;
