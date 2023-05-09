@@ -1,4 +1,5 @@
-const { Item, Category, Size } = require("../models");
+const { Item, Category, Size, CategoryItem } = require("../models");
+const sequelize = require("sequelize")
 
 class ProductController {
 	static findAllItem = async (req, res, next) => {
@@ -7,6 +8,7 @@ class ProductController {
 				where: {
 					visibility: "True",
 				},
+				order: [["id", "ASC"]],
 				include: [
 					{
 						model: Category,
@@ -35,20 +37,38 @@ class ProductController {
 				where: {
 					categoryName,
 				},
+				attributes: [
+					"id",
+					"categoryName",
+					[sequelize.literal('(SELECT COUNT(DISTINCT "CategoryItems"."itemId") FROM "CategoryItems" WHERE "CategoryItems"."categoryId" = "Category"."id")'), "categoryItemCount"],
+				],
 				include: [
 					{
-						model: Item,
-						as: "categoryItem",
-						through: { attributes: [] },
-						attributes: ["itemName", "price", "imageUrl"],
+					  model: CategoryItem,
+					  attributes: [
+						"categoryId",
+						"itemId",
+					  ],
+					  include: [
+						{
+						  model: Item,
+						  where:{
+							visibility: "True"
+						  },
+						  order: [["itemId","ASC"]],
+						  attributes: ["id","itemName", "price", "createdAt", "updatedAt"],
+						}
+					  ],
+					  limit:3,
+		  
 					},
-				],
+				  ],
 			});
 
 			if (data) {
 				res.status(200).json(data);
 			} else {
-				throw { name: "ErrorNotFound" };
+				throw { name: "CategoryNotFound" };
 			}
 		} catch (err) {
 			next(err);
