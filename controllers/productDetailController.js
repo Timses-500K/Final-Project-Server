@@ -28,7 +28,7 @@ class ProductDetailController {
 			if (data) {
 				res.status(200).json(data);
 			} else {
-				throw { name: "ErrorNotFound" };
+				throw { name: "ItemNotFound" };
 			}
 		} catch (err) {
 			next(err);
