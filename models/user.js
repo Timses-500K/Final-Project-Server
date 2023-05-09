@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const bcrypt = require('bcrypt');
 module.exports = (sequelize, DataTypes) => {
 
   class User extends Model {
@@ -25,16 +26,40 @@ module.exports = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       }, 
-      password: DataTypes.STRING,
-      firstName: DataTypes.STRING,
+      password:{
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate:{
+        notEmpty: true,
+        },
+      }, 
+      firstName:{
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate:{
+        notEmpty: true,
+        },
+      }, 
       lastName: DataTypes.STRING,
       birth: DataTypes.DATE,
-      visibility: DataTypes.STRING,
+      visibility: {
+        type: DataTypes.STRING,
+        defaultValue: 'True'
+      }
     },
     {
       hooks: {
-        //bcrypt
-        beforeCreate: function(user, options){
+        beforeCreate: async function (user) {
+          // Use bcrypt to hash the user's password before saving it
+          const saltRounds = 10;
+          const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+          user.password = hashedPassword;
+        },
+        beforeUpdate: async (user) => {
+          if (user.changed('password')) {
+            const hashedPassword = await bcrypt.hash(user.password, 10);
+            user.password = hashedPassword;
+          }
         }
       },
       sequelize,
