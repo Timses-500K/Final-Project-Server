@@ -19,7 +19,11 @@ module.exports = (sequelize, DataTypes) => {
     imageUrl: DataTypes.STRING,
     stock: DataTypes.INTEGER,
     color: DataTypes.STRING,
-    visibility: DataTypes.STRING,
+    visibility: {
+      type: DataTypes.STRING,
+      defaultValue: 'True'
+    }
+    
   }, {
     sequelize,
     modelName: 'Item',
