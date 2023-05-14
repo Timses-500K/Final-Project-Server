@@ -1,12 +1,33 @@
 const { User } = require("../models");
+const { Op } = require("sequelize");
+const jwt = require('jsonwebtoken');
+require('dotenv');
 
 
 class LoginRegisterController {
 
     static register = async (req, res, next) => {
         try {
-            const {email, username, password, firstName, lastName, birth, visibility} = req.body;
-            
+            const {email, username, password, firstName, lastName, birth} = req.body;
+            // Check if the email or username already exist
+            const existingUser = await User.findOne({
+                where: {
+                    [Op.or]: [{email}, {username}],
+                }
+            });
+            if (existingUser) {
+                // Return an error response if either email or username is already taken
+                if (existingUser.email === email && existingUser.username === username) {
+                    return res.status(400).json({message: "Email and username are already taken."});
+                }
+                if (existingUser.email === email) {
+                    return res.status(400).json({message: "Email is already taken."});
+                }
+                if (existingUser.username === username) {
+                    return res.status(400).json({message: "Username is already taken."});
+                }
+            }
+            // Create a new user if email and username are unique
             const data = await User.create({
                 email,
                 username,
@@ -14,41 +35,39 @@ class LoginRegisterController {
                 firstName,
                 lastName,
                 birth,
-                visibility
-            })
+            });
 
-            res.status(201).json(data);
+            const token = jwt.sign({ id: data.id }, process.env.JWT_SECRET );
+
+            res.status(201).json({ token, data });
         } catch(err) {
             next(err);
         }
-    }
+    };
 
     static login = async (req, res, next) => {
-        const {email, username, password} = req.body;
-
+        const { email, password } = req.body;
+    
         try {
-            const data = await User.findOne({
+            const user = await User.findOne({
                 where: {
                     email,
-                    username,
-                    password
-                }
-            })
-
-            if(data) {
-                res.status(200).json(data)
-            } else {
-                throw {name: "ErrorNotFound"}
+                },
+            });
+    
+            if (!user) {
+                throw { name: "WrongEmail" };
+            } else if ( !(await user.verifyPassword(password))) {
+                throw { name: "WrongPassword" };
             }
-
-        } catch(err) {
+    
+            const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+    
+            res.status(201).json({ token, name: user.firstName });
+        } catch (err) {
             next(err);
         }
-    }
-
-
-
-
+    };
     
 }
 
