@@ -55,7 +55,8 @@ class CartController {
 			const autoFillVisibility = "True";
 			const autoFillUpdatedAt = new Date();
 			const autoFillCreateddAt = new Date();
-			const { userId, addressId, itemId, quantity } = req.body;
+			const { userId } = req.params;
+			const { addressId, itemId, quantity } = req.body;
 
 			const item = await Item.findOne({
 				where: {
@@ -66,29 +67,93 @@ class CartController {
 				throw { name: "ItemNotFound" };
 			}
 
+			const cart = await Cart.findAll({
+				where: {
+					userId,
+				},
+			});
+			if (!cart) {
+				throw { name: "ErrorNotFound" };
+				// throw { name: "CartNotFound" };
+			}
+
+			// create a new array that contains only the id values of each index in the cart array.
+			const cartIds = cart.map((cart) => cart.id);
+			const userIds = cart.map((cart) => cart.userId);
+
+			const cartItem = await CartItem.findAll({
+				where: {
+					cartId: cartIds,
+				},
+			});
+
+			const itemIdCartItem = cartItem.map((cartItem) => cartItem.itemId);
 			const price = item.price;
 			const totalPrice = price * quantity;
-			const newCart = await Cart.create({
-				userId,
-				addressId,
-				totalPrice,
-				visibility: autoFillVisibility,
-				createdAt: autoFillCreateddAt,
-				updatedAt: autoFillUpdatedAt,
-			});
 
-			const newCartItem = await CartItem.create({
-				cartId: newCart.id,
-				itemId,
-				quantity,
-				createdAt: autoFillCreateddAt,
-				updatedAt: autoFillUpdatedAt,
-			});
+			// This code will check if the user already has the same item in the cart
+			// if the user already has the same item,it'll just update the item quantity
+			// if not then the code will create a new cart
+			if (itemIdCartItem.includes(itemId) && userIds[0] == userId) {
+				const cartItem = await CartItem.findOne({
+					where: {
+						cartId: cartIds,
+						itemId,
+					},
+				});
 
-			res.status(201).json({
-				newCart,
-				newCartItem,
-			});
+				const putCart = await Cart.update(
+					{
+						totalPrice,
+						updatedAt: autoFillUpdatedAt,
+					},
+					{
+						where: {
+							id: cartItem.cartId,
+						},
+					}
+				);
+
+				const putCartItem = await CartItem.update(
+					{
+						quantity,
+						updatedAt: autoFillUpdatedAt,
+					},
+					{
+						where: {
+							cartId: cartItem.cartId,
+						},
+					}
+				);
+				res.status(201).json({
+					putCart,
+					putCartItem,
+					message: "Quantity updated successfully",
+				});
+			} else {
+				const newCart = await Cart.create({
+					userId,
+					addressId,
+					totalPrice,
+					visibility: autoFillVisibility,
+					createdAt: autoFillCreateddAt,
+					updatedAt: autoFillUpdatedAt,
+				});
+
+				const newCartItem = await CartItem.create({
+					cartId: newCart.id,
+					itemId,
+					quantity,
+					createdAt: autoFillCreateddAt,
+					updatedAt: autoFillUpdatedAt,
+				});
+
+				res.status(201).json({
+					newCart,
+					newCartItem,
+					message: "Cart created successfully",
+				});
+			}
 		} catch (err) {
 			next(err);
 		}
