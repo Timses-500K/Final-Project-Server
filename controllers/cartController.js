@@ -215,32 +215,32 @@ class CartController {
 		}
 	};
 
-	static softDeleteCart = async (req, res, next) => {
-		try {
-			const { cartId } = req.params;
-			const data = await Cart.update(
-				{
-					visibility: "False",
-				},
-				{
-					where: {
-						id: cartId,
-					},
-				}
-			);
+	// static softDeleteCart = async (req, res, next) => {
+	// 	try {
+	// 		const { cartId } = req.params;
+	// 		const data = await Cart.update(
+	// 			{
+	// 				visibility: "False",
+	// 			},
+	// 			{
+	// 				where: {
+	// 					id: cartId,
+	// 				},
+	// 			}
+	// 		);
 
-			if (data[0] === 1) {
-				res.status(200).json({
-					message: "Deleted successfully",
-				});
-			} else {
-				throw { name: "ErrorNotFound" };
-				throw { name: "CartNotFound" };
-			}
-		} catch (err) {
-			next(err);
-		}
-	};
+	// 		if (data[0] === 1) {
+	// 			res.status(200).json({
+	// 				message: "Deleted successfully",
+	// 			});
+	// 		} else {
+	// 			throw { name: "ErrorNotFound" };
+	// 			throw { name: "CartNotFound" };
+	// 		}
+	// 	} catch (err) {
+	// 		next(err);
+	// 	}
+	// };
 
 	static deleteCart = async (req, res, next) => {
 		try {
