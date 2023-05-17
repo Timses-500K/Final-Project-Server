@@ -113,7 +113,11 @@ class CartController {
 						},
 					}
 				);
-
+				const cart = await Cart.findOne({
+					where: {
+						id: cartItem.cartId,
+					},
+				});
 				const putCartItem = await CartItem.update(
 					{
 						quantity,
@@ -126,8 +130,8 @@ class CartController {
 					}
 				);
 				res.status(201).json({
-					putCart,
-					putCartItem,
+					cart,
+					cartItem,
 					message: "Quantity updated successfully",
 				});
 			} else {
