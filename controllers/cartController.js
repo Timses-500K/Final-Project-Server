@@ -208,7 +208,7 @@ class CartController {
 			res.status(200).json({
 				cart,
 				cartItem,
-				message: "Data berhasil berubah",
+				message: "Quantity has been changed",
 			});
 		} catch (err) {
 			next(err);
@@ -244,10 +244,10 @@ class CartController {
 
 	static deleteCart = async (req, res, next) => {
 		try {
-			const { id } = req.params;
+			const { cartId } = req.params;
 			const find = await Cart.findOne({
 				where: {
-					id,
+					id: cartId,
 				},
 			});
 			if (!find) {
@@ -256,10 +256,12 @@ class CartController {
 			}
 			const data = await Cart.destroy({
 				where: {
-					id,
+					id: cartId,
 				},
 			});
-			res.status(200).json({ message: "Deleted successfully" });
+			res
+				.status(200)
+				.json({ message: "Cart with id " + cartId + " deleted successfully" });
 		} catch (err) {
 			next(err);
 		}
