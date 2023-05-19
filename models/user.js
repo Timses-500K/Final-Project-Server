@@ -57,13 +57,18 @@ module.exports = (sequelize, DataTypes) => {
           const saltRounds = 10;
           const hashedPassword = await bcrypt.hash(user.password, saltRounds);
           user.password = hashedPassword;
+          //email to lowercase
+          user.email = user.email.toLowerCase();
         },
         beforeUpdate: async (user) => {
           if (user.changed('password')) {
             const hashedPassword = await bcrypt.hash(user.password, 10);
             user.password = hashedPassword;
           }
-        }
+          if (user.changed('email')) {
+            user.email = user.email.toLowerCase();
+          }
+        },
       },
       sequelize,
       modelName: "User",
