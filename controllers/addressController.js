@@ -105,6 +105,26 @@ class AddressController {
     }
   };
 
-}
+  // Delete Address
+  static async deleteAddress(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const {addressId} = req.params;
+      const address = await Address.findByPk(addressId, {
+        where: {
+          userId: userId,
+        },
+      });
+      if (address) {
+        await address.destroy();
+        res.status(200).json({ message: "Address deleted successfully" });
+      } else {
+        next({ name: "AddressNotFound" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+};
 
 module.exports = AddressController;
