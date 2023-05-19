@@ -2,40 +2,40 @@ const { Address, User } = require("../models");
 
 class AddressController {
   // Get address by Id
-  static getAddressById = async (req, res, next) => {
-    const { userId, addressId } = req.params;
+  // static getAddressById = async (req, res, next) => {
+  //   const { userId, addressId } = req.params;
 
-    try {
-      const address = await Address.findOne({
-        where: {
-          id: addressId,
-          userId,
-        },
-        attributes: {
-          exclude: ["createdAt", "updatedAt"],
-        },
-      });
+  //   try {
+  //     const address = await Address.findOne({
+  //       where: {
+  //         id: addressId,
+  //         userId,
+  //       },
+  //       attributes: {
+  //         exclude: ["createdAt", "updatedAt"],
+  //       },
+  //     });
 
-      if (address) {
-        res.status(200).json({ address });
-      } else {
-        next({ name: "ErrorNotFound" });
-      }
-    } catch (err) {
-      next(err);
-    }
-  };
+  //     if (address) {
+  //       res.status(200).json({ address });
+  //     } else {
+  //       next({ name: "ErrorNotFound" });
+  //     }
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // };
 
-  // Create address by userId
+  // Create address by logged User
   static createAddress = async (req, res, next) => {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const { addressName, address, city, postalCode } = req.body;
 
     try {
       const user = await User.findByPk(userId);
       if (user) {
         const newAddress = await Address.create({
-          userId,
+          userId:userId,
           addressName,
           address,
           city,
@@ -50,15 +50,16 @@ class AddressController {
     }
   };
 
-  // Update address
+  // Update address by logged User
   static updateAddress = async (req, res, next) => {
-    const { userId, addressId } = req.params;
+    const userId = req.user.id;
+    const { addressId } = req.params;
     const { addressName, address, city, postalCode } = req.body;
     try {
       const addressToUpdate = await Address.findOne({
         where: {
           id: addressId,
-          userId,
+          userId: userId,
         },
       });
 
@@ -77,6 +78,33 @@ class AddressController {
       next(err);
     }
   };
+
+  // Find Addresses by logged user
+  static async findAddressloggedUser(req, res, next){
+    try {
+      const userId = req.user.id;
+      const user = await User.findByPk(userId, {
+        // attributes: [],
+        include:[
+          {
+            model: Address,
+            where:{
+              userId: userId
+            },
+            // order:[[ "id", "DESC" ]]
+          }
+        ],
+      });
+
+      if(!user){
+        next({name: "UserNotFound"});
+      }
+      res.status(200).json(user);
+    } catch (err) {
+      next(err);
+    }
+  };
+
 }
 
 module.exports = AddressController;
