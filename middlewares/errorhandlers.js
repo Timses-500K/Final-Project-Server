@@ -1,39 +1,49 @@
+const errorMessages = {
+  ErrorNotFound: {
+    statusCode: 404,
+    message: "Error Not Found",
+  },
+  CategoryNotFound: {
+    statusCode: 404,
+    message: "Category Not Found",
+  },
+  ItemNotFound: {
+    statusCode: 404,
+    message: "Item Not Found",
+  },
+  SizeNotFound: {
+    statusCode: 404,
+    message: "Size Not Found",
+  },
+  CartNotFound: {
+    statusCode: 404,
+    message: "Cart Not Found"
+  },
+  UserNotFound: {
+    statusCode: 404,
+    message: "User Not Found",
+  },
+  AddressNotFound: {
+    statusCode: 404,
+    message: "Address Not Found"
+  },
+  WrongEmail: {
+    statusCode: 404,
+    message: "Wrong Email",
+  },
+  WrongPassword: {
+    statusCode: 404,
+    message: "Wrong Password",
+  },
+};
+
 const errorHandler = (err, req, res, next) => {
   console.log(err);
-  if (err.name === "ErrorNotFound") {
-    console.log("Error Not Found");
-    res.status(404).json({
-      message: "Error Not Found",
-    });
-  } else if (err.name === "CategoryNotFound") {
-    console.log("Category Not Found");
-    res.status(404).json({
-      message: "Category Not Found",
-    });
-  } else if (err.name === "ItemNotFound") {
-    console.log("Item Not Found");
-    res.status(404).json({
-      message: "Item Not Found",
-    });
-  } else if (err.name === "SizeNotFound") {
-    console.log("Size Not Found");
-    res.status(404).json({
-      message: "Size Not Found",
-    });
-  } else if (err.name === "UserNotFound") {
-    console.log("User Not Found");
-    res.status(404).json({
-      message: "User Not Found",
-    });
-  } else if (err.name === "WrongEmail") {
-    console.log("Wrong Email");
-    res.status(404).json({
-      message: "Wrong Email",
-    });
-  } else if (err.name === "WrongPassword") {
-    console.log("Wrong Password");
-    res.status(404).json({
-      message: "Wrong Password",
+  const error = errorMessages[err.name];
+  if (error) {
+    console.log(error.message);
+    res.status(error.statusCode).json({
+      message: error.message,
     });
   } else {
     res.status(500).json({
