@@ -1,11 +1,12 @@
 const { User, Address, Order, Cart } = require("../models");
+// const { Auth } = require('../middlewares/auth');
 
 class UserController {
-  // Get user by id
-  static async findById(req, res, next) {
-    const { id } = req.params;
+  // Get user by id by logged user
+  static async findByLoggedUser(req, res, next) {
+    const id  = req.user.id;
     try {
-      const user = await User.findByPk(id, {
+      const user = await User.findByPk( id, {
         include: [
           {
             model: Address,
@@ -28,7 +29,7 @@ class UserController {
       if (user) {
         res.status(200).json(user);
       } else {
-        next({ name: "ErrorNotFound" });
+        next({ name: "UserNotFound" });
       }
     } catch (err) {
       next(err);
@@ -37,7 +38,7 @@ class UserController {
 
   // Update user by id
   static async update(req, res, next) {
-    const { id } = req.params;
+    const id  = req.user.id;
     const { username, email, password, firstName, lastName, birth } = req.body;
     try {
       const user = await User.findByPk(id);
@@ -52,7 +53,7 @@ class UserController {
         });
         res.status(200).json({ message: "User updated successfully", user });
       } else {
-        next({ name: "ErrorNotFound" });
+        next({ name: "UserNotFound" });
       }
     } catch (err) {
       next(err);
@@ -61,19 +62,39 @@ class UserController {
 
   // Delete user by id
   static async delete(req, res, next) {
-    const { id } = req.params;
+    const id = req.user.id;
     try {
       const user = await User.findByPk(id);
       if (user) {
         await user.destroy();
         res.status(200).json({ message: "User deleted successfully", user });
       } else {
-        next({ name: "ErrorNotFound" });
+        next({ name: "UserNotFound" });
       }
     } catch (err) {
       next(err);
     }
   }
+
+  //find logged user
+  static async findUser(req, res, next){
+    try {
+      const userId = req.user.id;
+      const user = await User.findByPk( userId, {
+        attributes: {
+          exclude: ["visibility"],
+        },
+      });
+
+      if(!user){
+        next({name: "UserNotFound"});
+      }
+      res.status(200).json(user);
+    } catch (err) {
+      next(err);
+    }
+  };
+
 }
 
 module.exports = UserController;
