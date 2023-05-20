@@ -5,6 +5,8 @@ module.exports = {
   up: (queryInterface, Sequelize) => {
     return Promise.all([
       queryInterface.addColumn('CartItems', 'sizeId', {
+        type: Sequelize.INTEGER,
+        // allowNull: false,
         onDelete: "CASCADE",
         onUpdate: "CASCADE",
         references: {
