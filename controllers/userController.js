@@ -1,5 +1,4 @@
 const { User, Address, Order, Cart } = require("../models");
-// const { Auth } = require('../middlewares/auth');
 
 class UserController {
   // Get user by id by logged user
