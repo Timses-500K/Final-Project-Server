@@ -3,7 +3,6 @@ const router = express.Router();
 
 const itemRouter = require("./item"),
 	addressRouter = require("./address"),
-	adminRouter = require("./admin"),
 	cartRouter = require("./cart"),
 	dashboardRouter = require("./dashboard"),
 	homeRouter = require("./home"),
@@ -15,8 +14,7 @@ const itemRouter = require("./item"),
 
 router.use("/api/item", itemRouter);
 router.use("/api/address", addressRouter);
-// router.use("/api/admin", adminRouter);
-// router.use("/api/cart", cartRouter);
+router.use("/api/cart", cartRouter);
 router.use("/api/dashboard", dashboardRouter);
 router.use("/api/home", homeRouter);
 router.use("/api/order", orderRouter);
