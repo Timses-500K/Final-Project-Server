@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
 
     static associate(models) {
       Size.belongsToMany(models.Item,{foreignKey: "sizeId", through: models.ItemSize, as: "sizeItem"});
-      Size.belongsToMany(models.Item,{foreignKey: "sizeId", through: models.CartItem, as: "sizeCart"});
+      // Size.belongsToMany(models.Item,{foreignKey: "sizeId", through: models.CartItem, as: "sizeCart"});
     }
   }
   Size.init(
