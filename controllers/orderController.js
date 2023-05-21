@@ -45,8 +45,13 @@ class OrderController {
           attributes: ["totalPrice"],
         });
 
-        const totalPrice = cart ? cart.totalPrice : 0;
-        const subtotal = cart ? cart.totalPrice : 0;
+        const cartTotalPrice = cart.totalPrice;
+        const tax = cartTotalPrice * 0.11;
+        const delivery = 11000;
+        const finalPrice = cartTotalPrice + tax + delivery;
+
+        const subtotal = cartTotalPrice;
+        const totalPrice = finalPrice.toFixed(2);
 
         const order = await Order.create({
           userId,
