@@ -1,4 +1,4 @@
-const { Order, Item, User } = require("../models");
+const { Order, Item, User, Address, Cart } = require("../models");
 
 class OrderController {
   // Get order by id
@@ -11,21 +11,81 @@ class OrderController {
           {
             model: Item,
             as: "orderItem",
-            attributes: { exclude: ["visibility"] },
           },
-          { model: User, attributes: ["id", "username", "email"] },
+          { model: User, attributes: ["id", "firstName", "lastName", "email"] },
         ],
       });
 
-      if (order) {
-        res.status(200).json({ order });
+      if (!order) {
+        return next({ name: "ErrorNotFound" });
+      }
+
+      // Fetch the Address from User
+      const user = await User.findByPk(order.userId);
+      const address = await Address.findOne({ where: { userId: user.id }, attributes: { exclude: ["createdAt", "updatedAt"] } });
+
+      res.status(200).json({ order, address });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  // Create order by userId
+  static async createOrder(req, res, next) {
+    const { userId } = req.params;
+
+    try {
+      const user = await User.findByPk(userId);
+
+      if (user) {
+        const cart = await Cart.findOne({
+          where: {
+            userId: user.id,
+          },
+          attributes: ["totalPrice"],
+        });
+
+        const cartTotalPrice = cart.totalPrice;
+        const tax = cartTotalPrice * 0.11;
+        const delivery = 11000;
+        const finalPrice = cartTotalPrice + tax + delivery;
+
+        const subtotal = cartTotalPrice;
+        const totalPrice = finalPrice.toFixed(2);
+
+        const order = await Order.create({
+          userId,
+          subtotal,
+          totalPrice,
+          status: "Pending",
+        });
+
+        res.status(201).json({ message: "Order created successfully", order });
       } else {
         next({ name: "ErrorNotFound" });
       }
     } catch (err) {
       next(err);
     }
-  };
+  }
+
+  // Delete order by Id
+  static async deleteOrder(req, res, next) {
+    const { orderId } = req.params;
+
+    try {
+      const order = await Order.findByPk(orderId);
+
+      if (order) {
+        await order.destroy();
+        res.status(200).json({ message: "Order deleted successfully" });
+      } else {
+        next({ name: "OrderNotFound", message: "Order not found" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 module.exports = OrderController;
