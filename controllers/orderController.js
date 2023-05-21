@@ -1,4 +1,4 @@
-const { Order, Item, User, Address } = require("../models");
+const { Order, Item, User, Address, Cart } = require("../models");
 
 class OrderController {
   // Get order by id
@@ -33,22 +33,31 @@ class OrderController {
   // Create order by userId
   static async createOrder(req, res, next) {
     const { userId } = req.params;
-    const { subtotal, totalPrice, status } = req.body;
 
     try {
       const user = await User.findByPk(userId);
 
       if (user) {
+        const cart = await Cart.findOne({
+          where: {
+            userId: user.id,
+          },
+          attributes: ["totalPrice"],
+        });
+
+        const totalPrice = cart ? cart.totalPrice : 0;
+        const subtotal = cart ? cart.totalPrice : 0;
+
         const order = await Order.create({
           userId,
           subtotal,
           totalPrice,
-          status,
+          status: "Pending",
         });
 
         res.status(201).json({ message: "Order created successfully", order });
       } else {
-        next({ name: "UserNotFound", message: "User not found" });
+        next({ name: "ErrorNotFound" });
       }
     } catch (err) {
       next(err);
