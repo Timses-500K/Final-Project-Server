@@ -1,19 +1,71 @@
-const { Order, Item, User, Address, Cart } = require("../models");
+const { Order, Item, User, Address, Cart, OrderItem } = require("../models");
 
 class OrderController {
+  static getAllOrder = async (req, res, next) => {
+    try {
+      const userId = req.user.id;
+
+      const orders = await Order.findAll({
+        where: {
+          userId: userId,
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
+
+      if (!orders || orders.length === 0) {
+        return next({ name: "ErrorNotFound" });
+      }
+
+      // Fetch order items for each order
+      const orderIds = orders.map(order => order.id);
+      const orderItems = await OrderItem.findAll({
+        where: {
+          orderId: orderIds,
+        },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
+
+      // Group order items by order
+      const ordersWithItems = orders.map(order => {
+        const orderId = order.id;
+        const items = orderItems.filter(item => item.orderId === orderId);
+
+        return {
+          order: order,
+          orderItems: items,
+        };
+      });
+
+      res.json({ ordersWithItems });
+    } catch (error) {
+      console.error("Error retrieving orders:", error);
+      res.status(500).json({ message: "Error retrieving orders" });
+    }
+  };
+
   // Get order by id
   static getOrderById = async (req, res, next) => {
     const { orderId } = req.params;
+    const userId = req.user.id;
 
     try {
-      const order = await Order.findByPk(orderId, {
+      const order = await Order.findOne({
+        where: {
+          id: orderId,
+          userId: userId,
+        },
         include: [
           {
             model: Item,
             as: "orderItem",
+            through: { attributes: ["orderId", "itemId", "quantity"] },
+            attributes: {
+              exclude: ["createdAt", "updatedAt"],
+            },
           },
           { model: User, attributes: ["id", "firstName", "lastName", "email"] },
         ],
+        attributes: { exclude: ["createdAt", "updatedAt"] },
       });
 
       if (!order) {
@@ -30,62 +82,80 @@ class OrderController {
     }
   };
 
-  // Create order by userId
-  static async createOrder(req, res, next) {
-    const { userId } = req.params;
+  // Create order
+  static createOrder = async (req, res, next) => {
+    const userId = req.user.id;
 
     try {
-      const user = await User.findByPk(userId);
-
-      if (user) {
-        const cart = await Cart.findOne({
-          where: {
-            userId: user.id,
+      const carts = await Cart.findAll({
+        where: {
+          userId: userId,
+        },
+        include: [
+          {
+            model: Item,
+            as: "cartItem",
+            through: { attributes: ["quantity"] },
           },
-          attributes: ["totalPrice"],
-        });
+        ],
+      });
 
-        const cartTotalPrice = cart.totalPrice;
-        const tax = cartTotalPrice * 0.11;
-        const delivery = 11000;
-        const finalPrice = cartTotalPrice + tax + delivery;
+      if (!carts || carts.length === 0) {
+        return next({ name: "ErrorNotFound" });
+      }
 
-        const subtotal = cartTotalPrice;
-        const totalPrice = finalPrice.toFixed(2);
+      // Create orders and order items based on carts and cart items
+      for (const cart of carts) {
+        const totalPrice = (cart.totalPrice * 0.11 + 11000).toFixed(2);
 
         const order = await Order.create({
-          userId,
-          subtotal,
-          totalPrice,
+          userId: cart.userId,
+          cartId: cart.id,
+          subtotal: cart.totalPrice,
+          totalPrice: totalPrice,
           status: "Pending",
         });
 
-        res.status(201).json({ message: "Order created successfully", order });
+        const cartItems = cart.cartItem;
+        for (const cartItem of cartItems) {
+          await OrderItem.create({
+            orderId: order.id,
+            itemId: cartItem.id,
+            quantity: cartItem.CartItem.quantity,
+          });
+        }
+      }
+
+      res.json({ message: "Orders created successfully" });
+    } catch (error) {
+      console.error("Error creating orders:", error);
+      res.status(500).json({ message: "Error creating orders" });
+    }
+  };
+
+  // Delete order by Id
+  static deleteOrder = async (req, res, next) => {
+    const { orderId } = req.params;
+    const userId = req.user.id;
+
+    try {
+      const order = await Order.findOne({
+        where: {
+          id: orderId,
+          userId: userId,
+        },
+      });
+
+      if (order) {
+        await order.destroy();
+        res.status(200).json({ message: "Order deleted successfully" });
       } else {
         next({ name: "ErrorNotFound" });
       }
     } catch (err) {
       next(err);
     }
-  }
-
-  // Delete order by Id
-  static async deleteOrder(req, res, next) {
-    const { orderId } = req.params;
-
-    try {
-      const order = await Order.findByPk(orderId);
-
-      if (order) {
-        await order.destroy();
-        res.status(200).json({ message: "Order deleted successfully" });
-      } else {
-        next({ name: "OrderNotFound", message: "Order not found" });
-      }
-    } catch (err) {
-      next(err);
-    }
-  }
+  };
 }
 
 module.exports = OrderController;
