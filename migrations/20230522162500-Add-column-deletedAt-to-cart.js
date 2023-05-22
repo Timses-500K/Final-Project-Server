@@ -5,9 +5,9 @@ module.exports = {
   up: (queryInterface, Sequelize) => {
     return Promise.all([
       queryInterface.addColumn('Carts', 'deletedAt', {
-        type: Sequelize.STRING,
+        type: Sequelize.DATE,
         // allowNull: false,
-
+        paranoid: true,
       }),
     ]);
   },
