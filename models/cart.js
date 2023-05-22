@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
       Cart.belongsTo(models.Address,{foreignKey: "addressId"});
       Cart.belongsToMany(models.Item,{foreignKey: "cartId", through: models.CartItem,as: "cartItem"});
       Cart.hasMany(models.Order,{foreignKey: "cartId"});
+      Cart.hasMany(models.CartItem,{foreignKey:"cartId"});
+      Cart.belongsToMany(models.Size,{foreignKey: "sizeId", through: models.CartItem,as: "cartSize"});
     }
   }
   Cart.init(
