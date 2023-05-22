@@ -9,7 +9,7 @@ router.get("/", Auth.authentication, orderController.getAllOrder);
 // Get order by id
 router.get("/:orderId", Auth.authentication, orderController.getOrderById);
 
-// Create order by userId
+// Create order by logged user
 router.post("/", Auth.authentication, orderController.createOrder);
 
 // Delete order by id
