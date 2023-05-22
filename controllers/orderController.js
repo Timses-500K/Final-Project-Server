@@ -82,7 +82,6 @@ class OrderController {
     }
   };
 
-  // Create order
   static createOrder = async (req, res, next) => {
     const userId = req.user.id;
 
@@ -104,15 +103,17 @@ class OrderController {
         return next({ name: "ErrorNotFound" });
       }
 
+      // Calculate the total price for the user
+      const totalPriceForUser = carts.reduce((total, cart) => total + cart.totalPrice, 0);
+      const totalPriceWithTax = totalPriceForUser * 0.11 + totalPriceForUser + 11000;
+
       // Create orders and order items based on carts and cart items
       for (const cart of carts) {
-        const totalPrice = (cart.totalPrice * 0.11 + 11000).toFixed(2);
-
         const order = await Order.create({
           userId: cart.userId,
           cartId: cart.id,
           subtotal: cart.totalPrice,
-          totalPrice: totalPrice,
+          totalPrice: totalPriceWithTax.toFixed(2),
           status: "Pending",
         });
 
