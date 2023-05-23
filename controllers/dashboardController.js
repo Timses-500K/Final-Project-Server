@@ -1,11 +1,39 @@
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
 const { Admin, Item, ItemSize, Category, Order, User, Size, CategoryItem } = require("../models");
 
 
 
 class DashboardController {
-  //Item
+  //Login Admin
+  static loginAdmin = async (req, res, next) => {
+    const { username, password } = req.body;
 
+    try {
+      // Find the admin record in the database
+      const admin = await Admin.findOne({ where: { username } });
+  
+      // If the admin doesn't exist, return an error
+      if (!admin) {
+        return res.status(401).json({ error: "Admin Not found" });
+      }
+  
+      // Compare the provided password with the hashed password in the database
+      const passwordMatch = await bcrypt.compare(password, admin.password);
+  
+      if (!passwordMatch) {
+        throw { name: "WrongPassword" };
+      }
+      // return res.status(200).json({ message: "Login successful" });
+      const token = jwt.sign({ id: admin.id }, process.env.JWT_SECRET);
+      res.status(201).json({ token, message: "Login Successfully" });
+    } catch (err) {
+      next(err)
+    }
+  };
+  
+  //Item
   static findAllItem = async (req, res, next) => {
     try {
       const data = await Item.findAll({
@@ -132,6 +160,38 @@ class DashboardController {
     }
   };
 
+  static addSizeItem = async (req, res, next) => {
+    try {
+      const { itemId, sizes } = req.body;
+
+      // Find the item by itemId
+      const item = await Item.findOne({ where: { id: itemId } });
+  
+      if (!item) {
+        throw { name: "ItemNotFound" };
+      }
+  
+      const newItemSizes = [];
+  
+      for (const size of sizes) {
+        // Create item size record
+        const newItemSize = await ItemSize.create({
+          itemId,
+          sizeId: size,
+        });
+  
+        newItemSizes.push(newItemSize);
+      }
+  
+      res.status(201).json({
+        item,
+        newItemSizes,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   static updateItemCatSize = async (req, res, next) => {
     try {
       const autoFillUpdatedAt = new Date();
@@ -140,7 +200,7 @@ class DashboardController {
         description,
         price,
         imageUrl,
-        stock,
+        // stock,
         color,
         visibility,
         categoryName,
@@ -158,7 +218,7 @@ class DashboardController {
       item.description = description || item.description;
       item.price = price || item.price;
       item.imageUrl = imageUrl || item.imageUrl;
-      item.stock = stock || item.stock;
+      // item.stock = stock || item.stock;
       item.color = color || item.color;
       item.visibility = visibility || item.visibility;
       item.updatedAt = autoFillUpdatedAt;
@@ -179,33 +239,6 @@ class DashboardController {
         categoryId: category.id
       })
 
-      // Find the category and update the item's category
-      // const category = await Category.findOne({
-      //   where: {
-      //     categoryName,
-      //   },
-      // });
-      // if (!category) {
-      //   return res.status(404).json({ message: "Category not found" });
-      // } 
-      // let categoryItem = await CategoryItem.findOne({
-      //   where: {
-      //     categoryId: category.id,
-      //     itemId: item.id,
-      //   },
-      // });
-      // if (!categoryItem) {
-      //   // Create a new category item if it doesn't exist
-      //   categoryItem = await CategoryItem.create({
-      //     categoryId: category.id,
-      //     itemId: item.id,
-      //   });
-      // } else {
-      //   categoryItem.categoryId = category.id;
-      //   categoryItem.itemId = item.id;
-      //   await categoryItem.save();
-      // }
-
       // Update the item's sizes
       await ItemSize.destroy({
         where: {
@@ -221,6 +254,17 @@ class DashboardController {
         });
         newItemSizes.push(newItemSize);
       }
+
+      const stock = await ItemSize.findAll({
+        where: {
+          itemId: item.id,
+          sizeId: sizes,
+        },
+      });
+  
+      const countStock = stock.length;
+  
+      item.stock = countStock;
 
       // Save the updated item
       await item.save();
@@ -642,6 +686,7 @@ class DashboardController {
       next(err);
     }
   };
+
 };
 
 module.exports = DashboardController;
