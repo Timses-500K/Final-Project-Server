@@ -1,4 +1,4 @@
-const { Cart, Item, CartItem, ItemSize, Size } = require("../models");
+const { Cart, Item, CartItem, ItemSize, Size, Address } = require("../models");
 
 class CartController {
 	static showAllCartByUserId = async (req, res, next) => {
@@ -6,13 +6,13 @@ class CartController {
 			const { userId } = req.params;
 			const cart = await Cart.findAll({
 				where: {
-					userId,
-					visibility: "True",
+					userId:userId,
+					
 				},
 			});
 			if (cart[0] == null) {
-				throw { name: "ErrorNotFound" };
-				// throw { name: "CartNotFound" };
+				// throw { name: "ErrorNotFound" };
+				throw { name: "CartNotFound" };
 			}
 
 			// create a new array that contains only the id values of each index in the cart array.
@@ -73,8 +73,8 @@ class CartController {
 				},
 			});
 			if (!cart) {
-				throw { name: "ErrorNotFound" };
-				// throw { name: "CartNotFound" };
+				// throw { name: "ErrorNotFound" };
+				throw { name: "CartNotFound" };
 			}
 
 			// create a new array that contains only the id values of each index in the cart array.
@@ -177,8 +177,8 @@ class CartController {
 				},
 			});
 			if (!cart) {
-				throw { name: "ErrorNotFound" };
-				// throw { name: "CartNotFound" };
+				// throw { name: "ErrorNotFound" };
+				throw { name: "CartNotFound" };
 			}
 
 			// find cart item to be updated
@@ -251,8 +251,8 @@ class CartController {
 				},
 			});
 			if (!find) {
-				throw { name: "ErrorNotFound" };
-				// throw { name: "CartNotFound" };
+				// throw { name: "ErrorNotFound" };
+				throw { name: "CartNotFound" };
 			}
 			const data = await Cart.destroy({
 				where: {
@@ -266,6 +266,92 @@ class CartController {
 			next(err);
 		}
 	};
+
+	static addToCart = async (req, res, next) => {
+		try {
+			const userId = req.user.id;
+			const { itemId, sizeId, quantity } = req.body;
+			
+			//find Address
+			const address = await Address.findByPk(userId,{
+				where: {
+					userId: userId
+				}
+			});
+
+			//find Item
+			const itemSelect = await Item.findOne({
+				where: {
+					id: itemId,
+				},
+			});
+			if (!itemSelect) {
+				throw { name: "ItemNotFound" };
+			}
+			//find Size
+			const sizeSelect = await Size.findOne({
+				where: {
+					id: sizeId,
+				},
+			});
+			
+			//total Price
+			const totalPrice = itemSelect.price * quantity;
+
+			const cart = await Cart.create({
+			  userId: userId,
+			  addressId:address.id,
+			  totalPrice: totalPrice,
+			  visibility:"True",
+			});
+
+			const cartItem = await CartItem.create({
+				cartId: cart.id,
+				itemId: itemSelect.id,
+				sizeId: sizeSelect.id,
+				quantity: quantity
+			});
+			
+			// await cart.save();
+			return res.status(201).json({ cart,cartItem });
+		} catch (err) {
+			next(err);
+		}
+	}
+
+	static showCarts = async (req, res, next) => {
+		try {
+			const userId = req.user.id;
+			const carts = await Cart.findAll({
+				where: {
+					userId: userId
+				},
+				include: [
+					{
+						model: Item,
+						as: "cartItem",
+						through: { attributes: ["quantity"] },
+						attributes: ["itemName", "price", "imageUrl"],
+						include: [
+							{
+								model: CartItem,
+								attributes: [ "sizeId" ],
+								include: [
+									{
+										model: Size,
+										attributes: ["size"]
+									}
+								]
+							}
+						]
+					},
+				],
+			})
+			res.status(200).json(carts);
+		} catch (err) {
+			next(err);
+		}
+	}
 }
 
 module.exports = CartController;
