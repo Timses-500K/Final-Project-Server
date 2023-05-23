@@ -1,11 +1,19 @@
 const express = require("express");
 const router = express.Router();
+const { Auth } = require('../middlewares/auth')
 const DashboardController = require("../controllers/dashboardController.js");
+
+//login ADmin
+router.post("/login", DashboardController.loginAdmin);
+
+// middleware
+// router.use(Auth.authorAdmin);
 
 //ItemApi
 router.get("/item", DashboardController.findAllItem);
 router.get("/item/false", DashboardController.findAllItemFalse);
 router.post("/item", DashboardController.createItemCatSize);
+router.post("/size/item/", DashboardController.addSizeItem);
 router.put("/item/:itemId", DashboardController.updateItemCatSize);
 router.delete("/item/:id", DashboardController.destroyItem);
 router.delete("/item/:itemId/size", DashboardController.destroyItemSize);

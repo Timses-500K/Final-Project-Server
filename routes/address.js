@@ -3,19 +3,17 @@ const router = express.Router();
 const { Auth } = require('../middlewares/auth');
 const AddressController = require("../controllers/addressController.js");
 
-// Get a specific address by ID
-// router.get("/:userId/:addressId", Auth.authentication, AddressController.getAddressById);
-
+router.use( Auth.author)
 // Find addresses by logged User
-router.get("/", Auth.authentication, AddressController.findAddressloggedUser);
+router.get("/", AddressController.findAddressloggedUser);
 
 // Create a new address
-router.post("/", Auth.authentication, AddressController.createAddress);
+router.post("/", AddressController.createAddress);
 
 // Update an address
-router.put("/:addressId", Auth.authentication , AddressController.updateAddress);
+router.put("/:addressId", AddressController.updateAddress);
 
 // Delete Address
-router.delete("/:addressId", Auth.authentication, AddressController.deleteAddress);
+router.delete("/:addressId", AddressController.deleteAddress);
 
 module.exports = router;

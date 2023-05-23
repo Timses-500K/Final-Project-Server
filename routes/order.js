@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const orderController = require("../controllers/orderController");
+const { Auth } = require("../middlewares/auth.js");
+
+//middleware
+router.use( Auth.author);
 
 // Get order by id
 router.get("/:orderId", orderController.getOrderById);
