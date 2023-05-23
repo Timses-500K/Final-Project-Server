@@ -16,12 +16,12 @@ class ProductController {
 						through: { attributes: [] },
 						attributes: ["categoryName"],
 					},
-					{
-						model: Size,
-						as: "itemSize",
-						through: { attributes: [] },
-						attributes: ["size"],
-					},
+					// {
+					// 	model: Size,
+					// 	as: "itemSize",
+					// 	through: { attributes: [] },
+					// 	attributes: ["size"],
+					// },
 				],
 			});
 			res.status(200).json(data);
@@ -32,10 +32,10 @@ class ProductController {
 
 	static findAllByCat = async (req, res, next) => {
 		try {
-			const { categoryName } = req.params;
+			const { id } = req.params;
 			const data = await Category.findOne({
 				where: {
-					categoryName,
+					id,
 				},
 				attributes: [
 					"id",
@@ -55,11 +55,11 @@ class ProductController {
 						  where:{
 							visibility: "True"
 						  },
-						  order: [["itemId","ASC"]],
-						  attributes: ["id","itemName", "price", "createdAt", "updatedAt"],
+						  order: [["id","ASC"]],
+						  attributes: ["id","itemName", "imageUrl", "price", "createdAt", "updatedAt"],
 						}
 					  ],
-					  limit:3,
+					//   limit:5,
 		  
 					},
 				  ],
