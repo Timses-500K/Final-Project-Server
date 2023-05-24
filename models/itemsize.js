@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
   }
   ItemSize.init({
     itemId: DataTypes.INTEGER,
-    sizeId: DataTypes.INTEGER
+    sizeId: DataTypes.INTEGER,
+    stock: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'ItemSize',
