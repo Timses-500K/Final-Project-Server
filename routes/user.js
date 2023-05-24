@@ -13,7 +13,7 @@ router.get("/", UserController.findByLoggedUser);
 router.put("/", UserController.update);
 
 // Delete user by ID
-router.delete("/", UserController.delete);
+// router.delete("/", UserController.delete);
 
 
 module.exports = router;
