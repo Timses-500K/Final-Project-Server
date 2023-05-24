@@ -7,7 +7,7 @@ module.exports = {
       queryInterface.addColumn('ItemSizes', 'stock', {
         type: Sequelize.INTEGER,
         // allowNull: false,
-        paranoid: true,
+        // paranoid: true,
       }),
     ]);
   },
