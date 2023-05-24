@@ -6,8 +6,6 @@ module.exports = {
     return Promise.all([
       queryInterface.addColumn('Carts', 'deletedAt', {
         type: Sequelize.DATE,
-        // allowNull: false,
-        paranoid: true,
       }),
     ]);
   },
