@@ -10,8 +10,10 @@ module.exports = (sequelize, DataTypes) => {
       Item.belongsToMany(models.Size,{foreignKey: "itemId", through: models.ItemSize, as: "itemSize"});
       Item.belongsToMany(models.Order,{foreignKey: "itemId", through: models.OrderItem, as: "itemOrder"})
       Item.belongsToMany(models.Category,{foreignKey: "itemId", through: models.CategoryItem, as: "itemCategory"});
+      Item.hasMany(models.ItemSize,{foreignKey:"itemId"});
       Item.hasMany(models.ItemImage,{foreignKey: "itemId"});
       Item.hasMany(models.CartItem,{foreignKey: "itemId"});
+
     }
   }
   Item.init({
