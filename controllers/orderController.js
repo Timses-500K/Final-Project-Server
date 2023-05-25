@@ -1,4 +1,4 @@
-const { Order, Item, User, Address, Cart, OrderItem } = require("../models");
+const { Order, Item, User, Address, Cart, OrderItem, CartItem, Size } = require("../models");
 
 class OrderController {
   static getAllOrder = async (req, res, next) => {
@@ -16,27 +16,7 @@ class OrderController {
         return next({ name: "ErrorNotFound" });
       }
 
-      // Fetch order items for each order
-      const orderIds = orders.map(order => order.id);
-      const orderItems = await OrderItem.findAll({
-        where: {
-          orderId: orderIds,
-        },
-        attributes: { exclude: ["createdAt", "updatedAt"] },
-      });
-
-      // Group order items by order
-      const ordersWithItems = orders.map(order => {
-        const orderId = order.id;
-        const items = orderItems.filter(item => item.orderId === orderId);
-
-        return {
-          order: order,
-          orderItems: items,
-        };
-      });
-
-      res.json({ ordersWithItems });
+      res.json({ orders });
     } catch (error) {
       console.error("Error retrieving orders:", error);
       res.status(500).json({ message: "Error retrieving orders" });
@@ -56,14 +36,22 @@ class OrderController {
         },
         include: [
           {
-            model: Item,
-            as: "orderItem",
-            through: { attributes: ["orderId", "itemId", "quantity"] },
+            model: OrderItem,
+            as: "OrderItems",
+            include: [
+              {
+                model: Item,
+                as: "Item",
+              },
+            ],
             attributes: {
               exclude: ["createdAt", "updatedAt"],
             },
           },
-          { model: User, attributes: ["id", "firstName", "lastName", "email"] },
+          {
+            model: User,
+            attributes: ["id", "firstName", "lastName", "email"],
+          },
         ],
         attributes: { exclude: ["createdAt", "updatedAt"] },
       });
@@ -74,7 +62,29 @@ class OrderController {
 
       // Fetch the Address from User
       const user = await User.findByPk(order.userId);
-      const address = await Address.findOne({ where: { userId: user.id }, attributes: { exclude: ["createdAt", "updatedAt"] } });
+      const address = await Address.findOne({
+        where: { userId: user.id },
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
+
+      // Retrieve all order items associated with the order ID
+      const orderItems = await OrderItem.findAll({
+        where: { orderId: order.id },
+        include: [
+          {
+            model: Item,
+            as: "Item",
+            attributes: {
+              exclude: ["createdAt", "updatedAt"],
+            },
+          },
+        ],
+        attributes: {
+          exclude: ["createdAt", "updatedAt"],
+        },
+      });
+
+      order.dataValues.OrderItems = orderItems; // Add the order items to the order object
 
       res.status(200).json({ order, address });
     } catch (err) {
@@ -86,51 +96,60 @@ class OrderController {
     const userId = req.user.id;
 
     try {
-      const carts = await Cart.findAll({
+      const cart = await Cart.findOne({
         where: {
           userId: userId,
+          deletedAt: null, // Check for deletedAt value equal to NULL
         },
         include: [
           {
-            model: Item,
-            as: "cartItem",
-            through: { attributes: ["quantity"] },
+            model: CartItem,
+            as: "CartItems",
+            include: [
+              {
+                model: Item,
+                as: "Item",
+              },
+              {
+                model: Size,
+                as: "Size",
+              },
+            ],
           },
         ],
       });
 
-      if (!carts || carts.length === 0) {
+      if (!cart) {
         return next({ name: "ErrorNotFound" });
       }
 
-      // Calculate the total price for the user
-      const totalPriceForUser = carts.reduce((total, cart) => total + cart.totalPrice, 0);
+      const totalPriceForUser = cart.totalPrice;
       const totalPriceWithTax = totalPriceForUser * 0.11 + totalPriceForUser + 11000;
 
-      // Create orders and order items based on carts and cart items
-      for (const cart of carts) {
-        const order = await Order.create({
-          userId: cart.userId,
-          cartId: cart.id,
-          subtotal: cart.totalPrice,
-          totalPrice: totalPriceWithTax.toFixed(2),
-          status: "Pending",
-        });
+      const order = await Order.create({
+        userId: cart.userId,
+        cartId: cart.id,
+        subtotal: cart.totalPrice,
+        totalPrice: totalPriceWithTax.toFixed(2),
+        status: "Belum Bayar",
+      });
 
-        const cartItems = cart.cartItem;
-        for (const cartItem of cartItems) {
-          await OrderItem.create({
-            orderId: order.id,
-            itemId: cartItem.id,
-            quantity: cartItem.CartItem.quantity,
-          });
-        }
-      }
+      const orderItems = cart.CartItems.map(cartItem => ({
+        itemId: cartItem.Item.id,
+        orderId: order.id,
+        sizeId: cartItem.Size.id,
+        quantity: cartItem.quantity,
+      }));
 
-      res.json({ message: "Orders created successfully" });
+      await OrderItem.bulkCreate(orderItems);
+
+      // Perform a soft-deletion by calling destroy on the cart instance
+      await cart.destroy();
+
+      res.json({ message: "Order created successfully" });
     } catch (error) {
-      console.error("Error creating orders:", error);
-      res.status(500).json({ message: "Error creating orders" });
+      console.error("Error creating order:", error);
+      res.status(500).json({ message: "Error creating order" });
     }
   };
 
