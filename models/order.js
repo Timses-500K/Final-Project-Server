@@ -9,6 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       Order.belongsTo(models.User,{foreignKey: "userId"});
       Order.belongsToMany(models.Item,{foreignKey: "orderId", through: models.OrderItem,as:"orderItem"});
       Order.belongsTo(models.Cart,{foreignKey: "cartId"});
+      Order.hasMany(models.OrderItem, {foreignKey: "orderId"});
     }
   }
   Order.init({
