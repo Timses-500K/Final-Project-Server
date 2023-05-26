@@ -450,6 +450,7 @@ class CartController {
 			next(err);
 		}
 	}
+	
 }
 
 module.exports = CartController;
