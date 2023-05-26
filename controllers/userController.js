@@ -38,7 +38,7 @@ class UserController {
   // Update user by id
   static async update(req, res, next) {
     const id  = req.user.id;
-    const { username, email, password, firstName, lastName, birth } = req.body;
+    const { firstName, lastName, birth } = req.body;
     try {
       const user = await User.findByPk(id);
       if (user) {
