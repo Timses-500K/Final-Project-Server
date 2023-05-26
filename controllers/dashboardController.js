@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt");
-const { Admin, Item, ItemSize, Category, Order, User, Size, CategoryItem } = require("../models");
+const { Admin, Item, ItemSize, Category, Order, User, Size, CategoryItem, ItemImage } = require("../models");
 
 
 
@@ -53,9 +53,14 @@ class DashboardController {
           {
             model: Size,
             as: "itemSize",
-            through: { attributes: [] },
+            through: { attributes: ["stock"] },
             attributes: ["size"],
           },
+          {
+            model: ItemImage,
+            attributes: ["image"]
+
+          }
         ],
       });
       res.status(200).json(data);
@@ -99,9 +104,11 @@ class DashboardController {
         price,
         imageUrl,
         // stock,
+        // sizeStock,
         color,
         categoryName,
         sizes,
+        images,
       } = req.body;
 
       const category = await Category.findOne({
@@ -130,30 +137,30 @@ class DashboardController {
       });
 
       const newItemSizes = [];
-      for (const size of sizes) {
+      for (const { size, stock } of sizes) {
         const newItemSize = await ItemSize.create({
           itemId: newItem.id,
           sizeId: size,
+          stock: stock
         });
         newItemSizes.push(newItemSize);
-      }
-
-      const stock = await ItemSize.findAll({
-        where: {
+      };  
+      
+      const newItemImages = [];
+      for (const {image} of images) {
+        const newItemImage = await ItemImage.create({
           itemId: newItem.id,
-          sizeId: sizes,
-        },
-      });
-  
-      const countStock = stock.length;
-  
-      newItem.stock = countStock;
+          image: image
+        });
+        newItemImages.push(newItemImage);
+      };     
       await newItem.save();
 
       res.status(201).json({
         newItem,
         newCategoryItem,
         newItemSizes,
+        newItemImages
       });
     } catch (err) {
       next(err);
@@ -205,6 +212,7 @@ class DashboardController {
         visibility,
         categoryName,
         sizes,
+        images,
       } = req.body;
 
       // Find the item to be updated
@@ -218,61 +226,58 @@ class DashboardController {
       item.description = description || item.description;
       item.price = price || item.price;
       item.imageUrl = imageUrl || item.imageUrl;
-      // item.stock = stock || item.stock;
       item.color = color || item.color;
       item.visibility = visibility || item.visibility;
       item.updatedAt = autoFillUpdatedAt;
       
-      await CategoryItem.destroy({
-        where: {
-          itemId: item.id,
-        },
-      })
-      const category = await Category.findOne({
-        where: {
-          categoryName,
-        },
-      });
+      // await CategoryItem.destroy({
+      //   where: {
+      //     itemId: item.id,
+      //   },
+      // })
+      // const category = await Category.findOne({
+      //   where: {
+      //     categoryName,
+      //   },
+      // });
 
-      const newCategoryItem = await CategoryItem.create({
-        itemId: item.id,
-        categoryId: category.id
-      })
+      // const newCategoryItem = await CategoryItem.create({
+      //   itemId: item.id,
+      //   categoryId: category.id
+      // })
 
-      // Update the item's sizes
-      await ItemSize.destroy({
-        where: {
-          itemId: item.id,
-        },
-      });
+      // // Update the item's sizes
+      // await ItemSize.destroy({
+      //   where: {
+      //     itemId: item.id,
+      //   },
+      // });
 
-      const newItemSizes = [];
-      for (const size of sizes) {
-        const newItemSize = await ItemSize.create({
-          itemId: item.id,
-          sizeId: size,
-        });
-        newItemSizes.push(newItemSize);
-      }
+      // const newItemSizes = [];
+      // for (const size of sizes) {
+      //   const newItemSize = await ItemSize.create({
+      //     itemId: item.id,
+      //     sizeId: size,
+      //   });
+      //   newItemSizes.push(newItemSize);
+      // }
 
-      const stock = await ItemSize.findAll({
-        where: {
-          itemId: item.id,
-          sizeId: sizes,
-        },
-      });
+      // const stock = await ItemSize.findAll({
+      //   where: {
+      //     itemId: item.id,
+      //     sizeId: sizes,
+      //   },
+      // });
   
-      const countStock = stock.length;
+      // const countStock = stock.length;
   
-      item.stock = countStock;
+      // item.stock = countStock;
 
       // Save the updated item
       await item.save();
 
       res.status(200).json({
-        item,
-        newCategoryItem,
-        newItemSizes,
+        item
       });
     } catch (err) {
       next(err);
