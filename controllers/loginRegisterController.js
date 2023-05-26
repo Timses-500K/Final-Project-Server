@@ -1,4 +1,4 @@
-const { User } = require("../models");
+const { User, Cart } = require("../models");
 const { Op } = require("sequelize");
 const jwt = require('jsonwebtoken');
 require('dotenv');
@@ -10,23 +10,25 @@ class LoginRegisterController {
         try {
             const {email, username, password, firstName, lastName, birth} = req.body;
             // Check if the email or username already exist
+            const newUsername = username.toLowerCase();
+            const newEmail = email.toLowerCase();
             const existingUser = await User.findOne({
                 where: {
-                    [Op.or]: [{email}, {username}],
+                    [Op.or]: [{email: newEmail}, {username: newUsername}],
                 }
             });
             if (existingUser) {
                 // Return an error response if either email or username is already taken
-                if (existingUser.email === email && existingUser.username === username) {
+                if (existingUser.email === newEmail && existingUser.username === newUsername) {
                     return res.status(400).json({message: "Email and username are already taken."});
                 }
-                if (existingUser.email === email) {
+                if (existingUser.email === newEmail) {
                     return res.status(400).json({message: "Email is already taken."});
                 }
-                if (existingUser.username === username) {
+                if (existingUser.username === newUsername) {
                     return res.status(400).json({message: "Username is already taken."});
                 }
-            }
+            } 
             // Create a new user if email and username are unique
             const data = await User.create({
                 email,
@@ -36,10 +38,15 @@ class LoginRegisterController {
                 lastName,
                 birth,
             });
+            if (data){
+                const cartCreate = await Cart.create({
+                    userId: data.id,
+                    
+                });
+                const token = jwt.sign({ id: data.id }, process.env.JWT_SECRET );
 
-            const token = jwt.sign({ id: data.id }, process.env.JWT_SECRET );
-
-            res.status(201).json({ token, data });
+                res.status(201).json({ token, data:{firstName} });
+            }            
         } catch(err) {
             next(err);
         }
