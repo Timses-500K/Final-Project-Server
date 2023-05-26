@@ -8,10 +8,6 @@ router.use(Auth.author);
 
 // Get all order based on user
 router.get("/", orderController.getAllOrder);
-const { Auth } = require("../middlewares/auth.js");
-
-//middleware
-router.use( Auth.author);
 
 // Get order by id
 router.get("/:orderId", orderController.getOrderById);
