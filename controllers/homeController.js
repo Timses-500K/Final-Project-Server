@@ -9,7 +9,7 @@ class HomeController {
         attributes: [
           "id",
           "categoryName",
-          [sequelize.literal('(SELECT COUNT(DISTINCT "CategoryItems"."itemId") FROM "CategoryItems" WHERE "CategoryItems"."categoryId" = "Category"."id")'), "categoryItemCount"],
+          [sequelize.literal('(SELECT COUNT(DISTINCT "CategoryItems"."itemId") FROM "CategoryItems" WHERE "CategoryItems"."categoryId" = "Category"."id")'), "categoryItemsCount"],
         ],
         distinct: true,// tidak tampilkan duplikat
         order: [["id", "ASC"]],
