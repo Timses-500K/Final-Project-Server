@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       paranoid: true,
       // If you want to give a custom name to the deletedAt column
-      deletedAt: 'destroyTime',
+      deletedAt: 'deletedAt',
       modelName: "Cart",
     }
   );
