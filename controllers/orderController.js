@@ -80,7 +80,7 @@ class OrderController {
 
       order.dataValues.OrderItems = orderItems; // Add the order items to the order object
 
-      res.status(200).json({ order, address });
+      res.status(200).json({ order });
     } catch (err) {
       next(err);
     }
@@ -127,6 +127,7 @@ class OrderController {
         subtotal: cart.totalPrice,
         totalPrice: totalPriceWithTax.toFixed(2),
         status: "Belum Bayar",
+        addressId: cart.addressId,
       });
 
       const orderItems = cart.CartItems.map(cartItem => ({
