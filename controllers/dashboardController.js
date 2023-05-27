@@ -99,6 +99,7 @@ class DashboardController {
         price,
         imageUrl,
         // stock,
+        quantity,
         color,
         categoryName,
         sizes,
@@ -130,24 +131,25 @@ class DashboardController {
       });
 
       const newItemSizes = [];
-      for (const size of sizes) {
+      let stockContainer = []
+      
+      for (const item of quantity){
         const newItemSize = await ItemSize.create({
           itemId: newItem.id,
-          sizeId: size,
-        });
-        newItemSizes.push(newItemSize);
+          stock: item.stock,
+          sizeId: item.id
+        })
+        const stock = await ItemSize.findAll({
+          where: {
+            itemId: newItem.id,
+            sizeId: item.id
+          }
+        })
+        newItemSizes.push(newItemSize)
+        stockContainer.push(stock[0].dataValues.stock)
       }
 
-      const stock = await ItemSize.findAll({
-        where: {
-          itemId: newItem.id,
-          sizeId: sizes,
-        },
-      });
-  
-      const countStock = stock.length;
-  
-      newItem.stock = countStock;
+      newItem.stock = stockContainer.reduce((a, b) => a + b);
       await newItem.save();
 
       res.status(201).json({
