@@ -103,8 +103,6 @@ class DashboardController {
         description,
         price,
         imageUrl,
-        // stock,
-        // sizeStock,
         color,
         categoryName,
         sizes,
@@ -120,7 +118,7 @@ class DashboardController {
       if (!category) {
         throw { name: "CategoryNotFound" };
       }
-      
+
 
       const newItem = await Item.create({
         itemName,
