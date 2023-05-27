@@ -159,6 +159,7 @@ class OrderController {
   static async updateOrder(req, res, next) {
     const { orderId } = req.params;
     const userId = req.user.id;
+    const { payment } = req.body;
 
     try {
       const order = await Order.findOne({
@@ -175,6 +176,7 @@ class OrderController {
 
       // Update the order status or any other fields as needed
       order.status = "Verifikasi Bukti Pembayaran";
+      order.payment = payment || order.payment;
       await order.save();
 
       res.status(200).json({ message: "Order updated successfully" });
