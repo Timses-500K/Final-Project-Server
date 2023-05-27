@@ -61,13 +61,6 @@ class OrderController {
         return next({ name: "ErrorNotFound" });
       }
 
-      // Fetch the Address from User
-      const user = await User.findByPk(order.userId);
-      const address = await Address.findOne({
-        where: { userId: user.id },
-        attributes: { exclude: ["createdAt", "updatedAt"] },
-      });
-
       // Retrieve all order items associated with the order ID
       const orderItems = await OrderItem.findAll({
         where: { orderId: order.id },
