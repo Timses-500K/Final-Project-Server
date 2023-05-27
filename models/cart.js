@@ -17,7 +17,10 @@ module.exports = (sequelize, DataTypes) => {
       userId: DataTypes.INTEGER,
       addressId: DataTypes.INTEGER,
       totalPrice: DataTypes.FLOAT,
-      visibility: DataTypes.STRING,
+      visibility: {
+        type: DataTypes.STRING,
+        defaultValue: 'True'
+      }
     },
     {
       sequelize,
