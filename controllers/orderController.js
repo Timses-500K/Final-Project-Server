@@ -1,6 +1,7 @@
 const { Order, Item, User, Address, Cart, OrderItem, CartItem, Size } = require("../models");
 
 class OrderController {
+  // Get all orders of logged user
   static getAllOrder = async (req, res, next) => {
     try {
       const userId = req.user.id;
@@ -23,7 +24,7 @@ class OrderController {
     }
   };
 
-  // Get order by id
+  // Get order based on logged user's orderId
   static getOrderById = async (req, res, next) => {
     const { orderId } = req.params;
     const userId = req.user.id;
@@ -92,6 +93,7 @@ class OrderController {
     }
   };
 
+  // Create order based on logged user
   static createOrder = async (req, res, next) => {
     const userId = req.user.id;
 
@@ -153,7 +155,35 @@ class OrderController {
     }
   };
 
-  // Delete order by Id
+  // Updated order based on logged user's orderId
+  static async updateOrder(req, res, next) {
+    const { orderId } = req.params;
+    const userId = req.user.id;
+
+    try {
+      const order = await Order.findOne({
+        where: {
+          id: orderId,
+          userId: userId,
+          status: "Belum Bayar",
+        },
+      });
+
+      if (!order) {
+        return next({ name: "ErrorNotFound" });
+      }
+
+      // Update the order status or any other fields as needed
+      order.status = "Verifikasi Bukti Pembayaran";
+      await order.save();
+
+      res.status(200).json({ message: "Order updated successfully" });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  // Delete order based on logged user's  orderId
   static deleteOrder = async (req, res, next) => {
     const { orderId } = req.params;
     const userId = req.user.id;
