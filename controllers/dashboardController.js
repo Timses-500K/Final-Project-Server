@@ -104,7 +104,6 @@ class DashboardController {
         price,
         imageUrl,
         // stock,
-        // sizeStock,
         color,
         categoryName,
         sizes,
@@ -137,23 +136,24 @@ class DashboardController {
       });
 
       const newItemSizes = [];
-      for (const { size, stock } of sizes) {
+      for (const size of sizes) {
         const newItemSize = await ItemSize.create({
           itemId: newItem.id,
           sizeId: size,
-          stock: stock
         });
         newItemSizes.push(newItemSize);
-      };  
-      
-      const newItemImages = [];
-      for (const {image} of images) {
-        const newItemImage = await ItemImage.create({
+      }
+
+      const stock = await ItemSize.findAll({
+        where: {
           itemId: newItem.id,
-          image: image
-        });
-        newItemImages.push(newItemImage);
-      };     
+          sizeId: sizes,
+        },
+      });
+  
+      const countStock = stock.length;
+  
+      newItem.stock = countStock;
       await newItem.save();
 
       res.status(201).json({
