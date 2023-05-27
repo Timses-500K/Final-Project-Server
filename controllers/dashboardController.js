@@ -120,6 +120,7 @@ class DashboardController {
       if (!category) {
         throw { name: "CategoryNotFound" };
       }
+      
 
       const newItem = await Item.create({
         itemName,
