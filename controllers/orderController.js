@@ -142,6 +142,11 @@ class OrderController {
       // Perform a soft-deletion by calling destroy on the cart instance
       await cart.destroy();
 
+      await Cart.create({
+        userId: cart.userId,
+        totalPrice: 0,
+      });
+
       res.json({ message: "Order created successfully" });
     } catch (error) {
       console.error("Error creating order:", error);
