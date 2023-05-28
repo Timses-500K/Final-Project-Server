@@ -371,11 +371,15 @@ class CartController {
 			const { itemId, sizeId, quantity } = req.body;
 			
 			//find Address
-			const address = await Address.findByPk(userId,{
+			const address = await Address.findOne({
 				where: {
 					userId: userId
 				}
 			});
+
+			if(!address){
+				throw { name: "AddressNotFound" };
+			}
 
 			//find Item
 			const itemSelect = await Item.findOne({
@@ -386,31 +390,39 @@ class CartController {
 			if (!itemSelect) {
 				throw { name: "ItemNotFound" };
 			}
-			//find Size
+
 			const sizeSelect = await Size.findOne({
 				where: {
 					id: sizeId,
 				},
 			});
-			
-			//total Price
-			const totalPrice = itemSelect.price * quantity;
 
-			const cart = await Cart.create({
-			  userId: userId,
-			  addressId:address.id,
-			  totalPrice: totalPrice,
-			  visibility:"True",
+			const totalPrice = Math.floor((itemSelect.price - (itemSelect.price * 0.2)) * quantity);
+			
+			const cart = await Cart.findOne({
+				where: {
+					userId: userId,
+				}
 			});
 
+			// findCart.totalPrice = totalPrice
+			await cart.update({
+				addressId: address.id,
+				visibility: "True"
+			})
 			const cartItem = await CartItem.create({
 				cartId: cart.id,
 				itemId: itemSelect.id,
 				sizeId: sizeSelect.id,
-				quantity: quantity
+				quantity: quantity,
+				price: totalPrice
 			});
-			
+
+			await cart.increment('totalPrice', {by: totalPrice});
+
 			// await cart.save();
+			// await cartItem.save();
+			
 			return res.status(201).json({ cart,cartItem });
 		} catch (err) {
 			next(err);
@@ -450,7 +462,8 @@ class CartController {
 			next(err);
 		}
 	}
-	
+
+
 }
 
 module.exports = CartController;
